@@ -47,12 +47,12 @@ Higher executor core count (12 cores) consistently improves runtime due to incre
 ## 📁 Repository Structure
 /
 ├── Input/
-│ ├── generate_input.py
-│ ├── input.sh
+│   ├── generate_input.py
+│   ├── input.sh
 │
 ├── matrix_mul.py
 ├── run.sh
 ├── ec2_cluster_start.sh
 ├── ec2_cluster_stop.sh
 ├── README.md
-/
+
