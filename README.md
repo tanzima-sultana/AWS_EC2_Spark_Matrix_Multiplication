@@ -56,3 +56,27 @@ Higher executor core count (12 cores) consistently improves runtime due to incre
 ├── ec2_cluster_stop.sh
 ├── README.md
 
+## ⚙️ How to Run
+
+### 1. Generate input and upload to S3
+From the `Input/` directory:
+```bash
+cd Input
+./input.sh <matrix_size>
+```
+
+### 2. Start the EC2 Spark cluster
+```bash
+./ec2_cluster_start.sh
+```
+
+### 3. Run the Spark job
+```bash
+./run.sh <matrix_size> <executor_cores>
+```
+
+### 4. Check logs and output
+- Runtime log:  
+  `/home/ubuntu/matrix_log.txt`
+
+- Output matrix is saved in your S3 bucket under the `output/` folder.
