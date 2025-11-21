@@ -11,81 +11,13 @@ import boto3
 import numpy as np
 from pyspark.sql import SparkSession
 
-EC2_HOURLY_COST=0.0416
-
-'''
-# -----------------------------
-# EC2 metadata helpers
-# -----------------------------
-def get_instance_type():
-    try:
-        url = "http://169.254.169.254/latest/meta-data/instance-type"
-        with urllib.request.urlopen(url, timeout=2) as r:
-            return r.read().decode().strip()
-    except Exception:
-        return None
-
-
-def get_region():
-    try:
-        url = "http://169.254.169.254/latest/meta-data/placement/region"
-        with urllib.request.urlopen(url, timeout=2) as r:
-            return r.read().decode().strip()
-    except Exception:
-        return None
-
-
-# -----------------------------
-# Get EC2 on-demand hourly price using AWS Pricing API
-# -----------------------------
-def get_ec2_price(instance_type, region):
-    # Map AWS region code -> Pricing API "location" name
-    region_map = {
-        "us-east-1": "US East (N. Virginia)",
-        "us-west-2": "US West (Oregon)",
-        "us-east-2": "US East (Ohio)",
-        "eu-west-1": "EU (Ireland)",
-    }
-
-    location = region_map.get(region)
-    if not location or not instance_type:
-        return None
-
-    pricing = boto3.client("pricing", region_name="us-east-1")
-
-    try:
-        resp = pricing.get_products(
-            ServiceCode="AmazonEC2",
-            Filters=[
-                {"Type": "TERM_MATCH", "Field": "instanceType", "Value": instance_type},
-                {"Type": "TERM_MATCH", "Field": "location", "Value": location},
-                {"Type": "TERM_MATCH", "Field": "operatingSystem", "Value": "Linux"},
-                {"Type": "TERM_MATCH", "Field": "tenancy", "Value": "Shared"},
-                {"Type": "TERM_MATCH", "Field": "preInstalledSw", "Value": "NA"},
-                {"Type": "TERM_MATCH", "Field": "capacitystatus", "Value": "Used"},
-            ],
-            MaxResults=1,
-        )
-
-        if not resp.get("PriceList"):
-            return None
-
-        price_item = json.loads(resp["PriceList"][0])
-        terms = price_item["terms"]["OnDemand"]
-        term_id = next(iter(terms))
-        price_dimensions = terms[term_id]["priceDimensions"]
-        dim_id = next(iter(price_dimensions))
-        price_per_hour = float(price_dimensions[dim_id]["pricePerUnit"]["USD"])
-        return price_per_hour
-    except Exception:
-        return None
-'''
+EC2_HOURLY_COST=0.354
 
 def main():
     # -----------------------------
     # Log file setup
     # -----------------------------
-    log_file = "/home/ubuntu/matrix_log.txt"
+    log_file = "/home/ubuntu/Spark_Matrix_Mul/matrix_log.txt"
 
     # Delete existing log file if present
     if os.path.exists(log_file):
@@ -115,7 +47,8 @@ def main():
 
     # Start timer after Spark + setup
     start_time = time.time()
-
+    
+    input_start_time = time.time()
     # -------------------------------------
     # Load A
     # -------------------------------------
@@ -140,6 +73,9 @@ def main():
     num_rows_B, num_cols_B = B.shape
 
     print(f"Matrix B: {num_rows_B} x {num_cols_B}")
+    
+    input_end_time = time.time()
+    input_time = input_end_time - input_start_time
 
     # -------------------------------------
     # Broadcast B
@@ -184,14 +120,20 @@ def main():
         for row in C:
             tmp.write(json.dumps(row.tolist()) + "\n")
         local_file = tmp.name
-
+    
     # -------------------------------------
     # Upload to S3
     # -------------------------------------
+    
+    output_start_time = time.time()
+    
     s3 = boto3.client("s3")
     s3.upload_file(local_file, bucket, key)
 
     print("Saved output to S3.")
+    
+    output_end_time = time.time()
+    output_time = output_end_time - output_start_time
 
     # -------------------------------------
     # Timing and cost
@@ -199,7 +141,7 @@ def main():
     end_time = time.time()
     elapsed_sec = end_time - start_time
 
-    print(f"Execution Time: {elapsed_sec:.3f} seconds")
+    print(f"Total runtime: {elapsed_sec:.3f} seconds, Input read time: {input_time:.3f} seconds, Output write time: {output_time:.3f} seconds")
     
     # -----------------------------
     # Detect instance & price
