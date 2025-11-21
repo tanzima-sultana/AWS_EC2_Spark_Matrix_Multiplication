@@ -45,6 +45,7 @@ Higher executor core count (12 cores) consistently improves runtime due to incre
 ---
 
 ## 📁 Repository Structure
+```
 /
 ├── Input/
 │   ├── generate_input.py
@@ -55,6 +56,9 @@ Higher executor core count (12 cores) consistently improves runtime due to incre
 ├── ec2_cluster_start.sh
 ├── ec2_cluster_stop.sh
 ├── README.md
+```
+
+
 
 ## ⚙️ How to Run
 
