@@ -13,7 +13,7 @@ The goal is to evaluate how cluster size, executor cores, and partition configur
 
 ## Features
 - Distributed matrix multiplication using PySpark RDDs
-- Cluster setup automation scripts for AWS EC2
+- Cluster setup scripts for AWS EC2
 - Input matrix generator and upload helper (S3 or EBS)
 - Benchmarks for matrix sizes:
   - 1000 × 1000
