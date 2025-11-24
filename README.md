@@ -1,7 +1,7 @@
 # AWS EC2 Spark Matrix Multiplication
 
-This project implements large-scale matrix multiplication using PySpark and deployed on an AWS EC2 cluster (1 master, 2 workers).  
-The system reads matrix blocks from S3 or EBS, performs distributed computation using Spark RDD operations, and writes the output back to storage.
+This project implements large-scale matrix multiplication using PySpark and deployed on an AWS EC2 cluster (1 master, 2 workers). 
+The system reads matrix blocks from S3, performs distributed computation using Spark RDD operations, and writes the output back to storage.
 It demonstrates scalable computation, cluster automation, and performance benchmarking across large matrix sizes up to 10,000 × 10,000.
 The goal is to evaluate how cluster size, executor cores, and partition configuration affect performance for different matrix sizes.
 

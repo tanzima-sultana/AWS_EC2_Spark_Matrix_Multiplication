@@ -1,0 +1,223 @@
+# Cluster Setup (Spark Standalone on AWS EC2)
+
+This document describes how to set up a Spark Standalone cluster on AWS EC2:
+- 1 Master node
+- N Worker nodes
+
+Assumptions:
+- All nodes are running Ubuntu.
+- Java, Spark, Python environment, and AWS CLI are already installed
+  (see requirements.sh / README instructions).
+- SSH key pair is available on your local machine for connecting to EC2 instances.
+
+
+============================================================
+1. Create Master EC2 Node
+============================================================
+
+1.1 Launch Master EC2 instance
+    - Create an EC2 instance for the Master node.
+    - Use a security group that:
+      - Allows SSH (port 22) from your IP.
+      - Allows Spark Master Web UI (port 8080) from your IP.
+      - Allows Spark Master communication (port 7077) from the worker nodes.
+    - Install all required software and packages on this Master (run requirements.sh)
+
+1.2 Create an AMI for the Master
+    - Once setup is complete, create an AMI of the Master node.
+    - This AMI will be used as a base image for future Master replacements (if needed).
+
+1.3 SSH key setup (local → master)
+    - From your local machine:
+      - Copy your public key to the Master to enable passwordless SSH from local (optional).
+      - Example:
+        - On local: ssh-copy-id -i <your_public_key> ubuntu@<MASTER_PUBLIC_DNS_OR_IP>
+      - Ensure key permissions:
+        - chmod 600 <your_private_key_file>
+
+1.4 Configure Spark workers file on Master
+    - On the Master node:
+      - Go to Spark conf directory:
+        cd /opt/spark/conf
+
+      - Copy template to create workers file:
+        cp workers.template workers
+
+      - Edit the 'workers' file and add the PRIVATE IP addresses of all worker nodes, e.g.:
+        <WORKER1_PRIVATE_IP>
+        <WORKER2_PRIVATE_IP>
+        <WORKER3_PRIVATE_IP>
+      - Save and exit.
+
+
+============================================================
+2. Create Base Worker EC2 Node
+============================================================
+
+2.1 Launch initial Worker EC2 instance
+    - Create one EC2 instance that will serve as the base Worker node.
+    - Use a security group that:
+      - Allows SSH (port 22) from your IP.
+      - Allows communication with the Master on port 7077 and any required internal ports.
+
+2.2 Install software on the Worker
+    - Install the same software stack as the Master (requirements.sh)
+
+2.3 Attach IAM role for S3 access
+    - For EACH worker:
+      - Attach an IAM role (e.g., EC2-S3-Access) with AmazonS3FullAccess.
+      - NOTE: Creating worker instances from an AMI does NOT automatically attach the IAM role.
+        You must attach the IAM role to each worker instance separately after launch.
+
+2.4 Configure Spark environment on the Worker
+    - On the Worker node:
+
+      - Go to Spark conf directory:
+        cd /opt/spark/conf
+
+      - Create spark-env.sh from template:
+        sudo cp spark-env.sh.template spark-env.sh
+
+      - Edit spark-env.sh and add:
+        SPARK_LOCAL_IP=<WORKER_PRIVATE_IP>
+
+      - Create spark-defaults.conf from template:
+        sudo cp spark-defaults.conf.template spark-defaults.conf
+
+      - Edit spark-defaults.conf and add:
+        spark.master spark://<MASTER_PRIVATE_IP>:7077
+
+      - Save both files.
+
+
+============================================================
+3. Launch Master and Workers from Master
+============================================================
+
+3.1 Define IP variables (for reference)
+    - On the Master node, you may define variables in ec2_cluster_start.sh:
+
+      MASTER_PRIVATE_IP=<MASTER_PRIVATE_IP>
+      WORKER1_PRIVATE_IP=<WORKER1_PRIVATE_IP>
+      WORKER2_PRIVATE_IP=<WORKER2_PRIVATE_IP>
+      # Add more as needed
+
+3.2 Start Spark Master and Workers from Master EC2
+    - On the Master node:
+
+      ./ec2_cluster_start.sh
+
+    - Spark Master Web UI:
+      - Accessible at:
+        http://<MASTER_PUBLIC_IP>:8080/
+
+============================================================
+4. Stopping Master and Workers
+============================================================
+
+4.1 Stop Workers from Master
+    - From the Master, run:
+
+      ./ec2_cluster_stop.sh
+
+
+============================================================
+5. Create Worker AMI and Launch Additional Workers
+============================================================
+
+5.1 Create an Image (AMI) from the Base Worker
+    - After configuring the base Worker (Java, Spark, AWS CLI, Python venv, spark-env.sh, spark-defaults.conf):
+      - Go to AWS EC2 → Instances
+      - Select the base Worker instance
+      - Click: Actions → Image and templates → Create Image
+      - Enter:
+        - Name: e.g., Spark-Worker-AMI
+        - Description: Base Worker with Spark + Java + Python
+      - Select:
+        - “No reboot” (optional but recommended)
+      - Click: Create Image
+    - AWS will automatically:
+      - Create an AMI
+      - Create an associated snapshot
+    - This AMI will be used to launch new Worker nodes quickly.
+
+5.2 Launch Additional Worker Instances from the Worker AMI
+    - Go to EC2 → AMIs
+    - Select the Spark-Worker-AMI created above
+    - Click: Launch Instance
+    - Choose:
+      - Instance type (same as Master or your preferred size)
+      - Worker Security Group (same SG rules as base worker)
+      - Subnet: Same VPC and subnets as other cluster nodes
+    - IMPORTANT:
+      - After launching each Worker, go to:
+        EC2 → Instance → Actions → Security → Modify IAM Role
+      - Attach the IAM role (e.g., EC2-S3-Access)  
+        *AMI-based instances DO NOT inherit IAM role automatically.*
+
+5.3 Update SPARK_LOCAL_IP for Each New Worker
+    - Every Worker node must advertise its **own PRIVATE IP** to Spark.
+    - On each newly launched Worker:
+      
+      - Edit spark-env.sh:
+        sudo nano /opt/spark/conf/spark-env.sh
+      
+      - Change or add this line:
+        SPARK_LOCAL_IP=<this-worker-private-ip>
+
+      - Save and exit.
+
+    - Restart Worker service if already running:
+      
+      /opt/spark/sbin/stop-worker.sh
+      /opt/spark/sbin/start-worker.sh spark://<MASTER_PRIVATE_IP>:7077
+
+    - Repeat this step for ALL additional workers created from the AMI.
+
+5.4 Update Worker Private IPs in Spark Master and Cluster Scripts
+    - After adding new Workers, update:
+        (a) Spark Master worker list  
+        (b) cluster_start.sh  
+        (c) cluster_stop.sh
+
+    A. Update Worker IPs in Master’s worker list:
+        On the Master:
+            cd /opt/spark/conf
+            sudo nano workers
+
+        Add each worker’s PRIVATE IP:
+            <WORKER1_PRIVATE_IP>
+            <WORKER2_PRIVATE_IP>
+            <WORKER3_PRIVATE_IP>
+            ...
+
+        Save and exit.
+
+    B. Update cluster_start.sh
+        - Open your cluster start script:
+            nano cluster_start.sh
+
+        - Ensure each worker start command uses new PRIVATE IP:
+            ssh -i <key.pem> ubuntu@<WORKER_PRIVATE_IP> "/opt/spark/sbin/start-worker.sh spark://<MASTER_PRIVATE_IP>:7077"
+
+        - Add or remove workers as needed.
+
+    C. Update cluster_stop.sh
+        - Open your cluster stop script:
+            nano cluster_stop.sh
+
+        - Stop workers using their PRIVATE IPs:
+            ssh -i <key.pem> ubuntu@<WORKER_PRIVATE_IP> "/opt/spark/sbin/stop-worker.sh"
+
+        - Add or remove workers accordingly.
+
+============================================================
+Notes
+============================================================
+
+- SPARK_LOCAL_IP MUST be unique for every worker.
+- Always use PRIVATE IPs for internal Spark communication (spark.master, SPARK_LOCAL_IP).
+- Use PUBLIC IP or public DNS only to access the Spark Master Web UI from your local machine.
+- IAM roles must be attached to each EC2 instance individually (not inherited from AMI).
+- After any config change in spark-env.sh or spark-defaults.conf, restart the affected processes.
+- Workers launched from the AMI are NOT automatically registered with Master; the spark-env and spark-defaults files ensure correct registration.
