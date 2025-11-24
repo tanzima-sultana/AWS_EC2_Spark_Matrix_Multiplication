@@ -1,12 +1,8 @@
-# DistSparkMatMul
-### Distributed Matrix Multiplication Using Apache Spark on AWS EC2 + S3
+# AWS EC2 Spark Matrix Multiplication
 
-DistSparkMatMul is a distributed matrix multiplication engine built with PySpark and deployed on an AWS EC2 cluster (1 master, 2 workers).  
-It demonstrates scalable computation, cluster automation, and performance benchmarking across large matrix sizes up to 10,000 × 10,000.
-
-This project implements large-scale matrix multiplication using PySpark.  
+This project implements large-scale matrix multiplication using PySpark and deployed on an AWS EC2 cluster (1 master, 2 workers).  
 The system reads matrix blocks from S3 or EBS, performs distributed computation using Spark RDD operations, and writes the output back to storage.
-
+It demonstrates scalable computation, cluster automation, and performance benchmarking across large matrix sizes up to 10,000 × 10,000.
 The goal is to evaluate how cluster size, executor cores, and partition configuration affect performance for different matrix sizes.
 
 ---
@@ -14,7 +10,7 @@ The goal is to evaluate how cluster size, executor cores, and partition configur
 ## Features
 - Distributed matrix multiplication using PySpark RDDs
 - Cluster setup scripts for AWS EC2
-- Input matrix generator and upload helper (S3 or EBS)
+- Input matrix generator and upload helper (S3)
 - Benchmarks for matrix sizes:
   - 1000 × 1000
   - 3000 × 3000
@@ -59,16 +55,15 @@ Larger matrix sizes also show significantly better performance when using higher
 Clone the repository:
 ```bash
 git clone https://github.com/<your-username>/DistSparkMatMul.git
-cd DistSparkMatMul
+cd AWS EC2 Spark Matrix Multiplication
 ```
 
-Install Python dependencies:
+Install dependencies:
 ```bash
-pip install -r requirements.txt
-```
+chmod +x requirements.sh
+./requirements.sh
 
-(If you do not have a requirements.txt file yet, generate it using  
-`pip freeze > requirements.txt`.)
+```
 
 ---
 
