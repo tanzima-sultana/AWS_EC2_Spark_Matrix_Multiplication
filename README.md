@@ -57,6 +57,7 @@ Clone the repository:
 git clone https://github.com/<your-username>/DistSparkMatMul.git
 cd AWS EC2 Spark Matrix Multiplication
 ```
+Follow cluster_setup.txt for AWS EC2 cluster setup instructions.
 
 Install dependencies:
 ```bash
@@ -71,13 +72,15 @@ chmod +x requirements.sh
 ```
 /
 ├── Input/
-│   ├── generate_input.py
-│   ├── input.sh
+│ ├── generate_input.py
+│ ├── input.sh
 │
 ├── matrix_mul.py
 ├── run.sh
 ├── ec2_cluster_start.sh
 ├── ec2_cluster_stop.sh
+├── requirements.sh
+├── cluster_setup.txt
 ├── README.md
 ```
 
@@ -107,5 +110,10 @@ cd Input
   `/home/ubuntu/matrix_log.txt`
 
 - Output matrix is saved in your S3 bucket under the `output/` folder.
+
+### 5. Stop the EC2 Spark cluster
+```bash
+./ec2_cluster_stop.sh
+```
 
 
