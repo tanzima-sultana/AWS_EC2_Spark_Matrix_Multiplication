@@ -91,8 +91,8 @@ Larger matrix sizes also show significantly better performance when using higher
 ## Installation
 Clone the repository:
 ```bash
-git clone https://github.com/<your-username>/DistSparkMatMul.git
-cd AWS EC2 Spark Matrix Multiplication
+git clone https://github.com/tanzima-sultana/AWS_EC2_Spark_Matrix_Multiplication.git
+cd AWS_EC2_Spark_Matrix_Multiplication
 ```
 Follow cluster_setup.txt for AWS EC2 cluster setup instructions.
 
