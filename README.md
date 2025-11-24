@@ -7,6 +7,33 @@ The goal is to evaluate how cluster size, executor cores, and partition configur
 
 ---
 
+## Tech Stack
+
+**Cloud & Infrastructure**
+- AWS EC2 (Standalone Spark Cluster)
+- AWS S3 for input/output storage
+- IAM Role-based access for S3 operations
+- Ubuntu 20.04/22.04 Linux environment
+
+**Distributed Computing**
+- Apache Spark 4.x (Standalone Mode)
+- PySpark RDD API (map, flatMap, reduceByKey)
+- Multi-node execution (1 Master, N Workers)
+- Cluster automation with Bash scripts
+
+**Programming & Libraries**
+- Python 3.x
+- NumPy
+- Boto3 (AWS SDK for Python)
+
+**DevOps & Tooling**
+- SSH automation (remote worker start/stop)
+- Custom `requirements.sh` for full environment setup
+- Cluster provisioning instructions (`cluster_setup.txt`)
+- Logging & benchmarking utilities
+
+---
+
 ## Features
 - Distributed matrix multiplication using PySpark RDDs
 - Cluster setup scripts for AWS EC2
@@ -40,33 +67,6 @@ The goal is to evaluate how cluster size, executor cores, and partition configur
 
 Higher executor core count (12 cores) consistently improves total runtime due to increased parallelism.
 Larger matrix sizes also show significantly better performance when using higher executor cores.
-
----
-
-## Tech Stack
-
-**Cloud & Infrastructure**
-- AWS EC2 (Standalone Spark Cluster)
-- AWS S3 for input/output storage
-- IAM Role-based access for S3 operations
-- Ubuntu 20.04/22.04 Linux environment
-
-**Distributed Computing**
-- Apache Spark 4.x (Standalone Mode)
-- PySpark RDD API (map, flatMap, reduceByKey)
-- Multi-node execution (1 Master, N Workers)
-- Cluster automation with Bash scripts
-
-**Programming & Libraries**
-- Python 3.x
-- NumPy
-- Boto3 (AWS SDK for Python)
-
-**DevOps & Tooling**
-- SSH automation (remote worker start/stop)
-- Custom `requirements.sh` for full environment setup
-- Cluster provisioning instructions (`cluster_setup.txt`)
-- Logging & benchmarking utilities
 
 ---
 
