@@ -73,6 +73,8 @@ jobs:
           OUTPUT="output_${MATRIX_SIZE}.txt"
           BUCKET="none"
           
+          mkdir -p Input 
+          
           ${PYTHON} Input/generate_input.py \
            --mode "local" \
            --bucket $BUCKET \
