@@ -1,0 +1,110 @@
+name: CI - Local Spark Matrix Multiplication
+
+on:
+  push:
+    branches: [ "main" ]      
+  pull_request:
+
+jobs:
+  test-matrix-mul:
+    runs-on: ubuntu-latest
+
+    env:
+      MATRIX_SIZE: 100
+      INPUT_DIR: Input
+      OUTPUT_DIR: Output
+
+    steps:
+      # 1) Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) Set up Java 
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # 3) Set up Python 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 4) Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy boto3
+
+      # 5) Download and unpack Spark 4.0.1
+      - name: Download Spark 4.0.1
+        run: |
+          SPARK_VERSION="4.0.1"
+          HADOOP_VERSION="3"
+          ARCHIVE="spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz"
+          URL="https://downloads.apache.org/spark/spark-${SPARK_VERSION}/${ARCHIVE}"
+
+          echo "Downloading Spark from $URL"
+          curl -L -o "$ARCHIVE" "$URL"
+          tar -xzf "$ARCHIVE"
+          mv "spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}" spark
+
+      # 6) Configure Spark env 
+      - name: Configure Spark environment
+        run: |
+          echo "SPARK_HOME=$PWD/spark" >> $GITHUB_ENV
+          echo "$PWD/spark/bin" >> $GITHUB_PATH
+          echo "PYSPARK_PYTHON=python3" >> $GITHUB_ENV
+
+      # 7) Python syntax check 
+      - name: Python syntax check (compileall)
+        run: |
+          python -m compileall .
+
+      # 8) Generate 100x100 input matrices using generate_input.py
+      - name: Generate input matrices
+        run: |
+          MATRIX_SIZE=100
+          INPUT_DIR="./Input"
+          INPUT_A="$INPUT_DIR/A_${MATRIX_SIZE}.txt"
+          INPUT_B="$INPUT_DIR/B_${MATRIX_SIZE}.txt"
+          OUTPUT="output_${MATRIX_SIZE}.txt"
+          BUCKET="none"
+          
+          ${PYTHON} ./Input/generate_input.py \
+          --mode "local" \
+          --bucket $BUCKET \
+          --input_a $INPUT_A \
+          --input_b $INPUT_B \
+          --n ${MATRIX_SIZE}
+
+      # 9) Run matrix_mul.py 
+      - name: Run matrix_mul.py 
+        env:
+          SPARK_MODE: local      
+        run: |
+          INPUT_A="${INPUT_DIR}/A_${MATRIX_SIZE}.txt"
+          INPUT_B="${INPUT_DIR}/B_${MATRIX_SIZE}.txt"
+          OUTPUT="output_${MATRIX_SIZE}.txt"
+
+          rm -f "$OUTPUT"
+
+          spark-submit \
+            --master local[*] \
+            matrix_mul.py \
+            --mode "local" \
+            --input_a "$INPUT_A" \
+            --input_b "$INPUT_B" \
+            --output "$OUTPUT"
+
+      # 10) Verify output exists and is not empty
+      - name: Verify output file
+        run: |
+          OUTPUT="output_${MATRIX_SIZE}.txt"
+          if [ ! -s "$OUTPUT" ]; then
+            echo "ERROR: Output file $OUTPUT is missing or empty."
+            exit 1
+          fi
+          echo "Output file $OUTPUT created successfully."

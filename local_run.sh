@@ -1,8 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Load local config
 if [ -f "config.env" ]; then
@@ -15,7 +12,7 @@ fi
 
 
 # ==== CONFIG ====      
-PYTHON="python3"
+
 
 MATRIX_SIZE=100
 
