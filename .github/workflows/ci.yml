@@ -67,15 +67,16 @@ jobs:
       - name: Generate input matrices
         run: |
           MATRIX_SIZE=100
+          INPUT_DIR="./Input"
+          INPUT_A="$INPUT_DIR/A_${MATRIX_SIZE}.txt"
+          INPUT_B="$INPUT_DIR/B_${MATRIX_SIZE}.txt"
           BUCKET="none"
-          
-          mkdir -p Input 
           
           ${PYTHON} Input/generate_input.py \
            --mode "local" \
            --bucket $BUCKET \
-           --input_a "Input/A_${MATRIX_SIZE}.txt" \
-           --input_b "Input/B_${MATRIX_SIZE}.txt" \
+           --input_a $INPUT_A \
+           --input_b $INPUT_B \
            --n ${MATRIX_SIZE}
 
       # 9) Run matrix_mul.py 

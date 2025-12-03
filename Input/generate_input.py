@@ -31,7 +31,7 @@ def main():
 
     # ----- Parse args
     parser = argparse.ArgumentParser(description="Generate NxN matrices A and B")
-    parser.add_argument("--mode", type=str, required=True, help="Local vs Cloud mode")
+    parser.add_argument("--mode", type=str, required=True, help="Local or Cloud mode")
     parser.add_argument("--bucket", type=str, required=True, help="For AWS bucket name. For local, its none")
     parser.add_argument("--input_a", type=str, required=True, help="Input A file path")
     parser.add_argument("--input_b", type=str, required=True, help="Input B file path")
