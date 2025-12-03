@@ -73,12 +73,12 @@ jobs:
           OUTPUT="output_${MATRIX_SIZE}.txt"
           BUCKET="none"
           
-          ${PYTHON} ./Input/generate_input.py \
-          --mode "local" \
-          --bucket $BUCKET \
-          --input_a $INPUT_A \
-          --input_b $INPUT_B \
-          --n ${MATRIX_SIZE}
+          ${PYTHON} Input/generate_input.py \
+           --mode "local" \
+           --bucket $BUCKET \
+           --input_a $INPUT_A \
+           --input_b $INPUT_B \
+           --n ${MATRIX_SIZE}
 
       # 9) Run matrix_mul.py 
       - name: Run matrix_mul.py 
