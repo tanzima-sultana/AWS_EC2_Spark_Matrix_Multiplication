@@ -1,0 +1,7 @@
+Matrix A: 100 x 100
+Matrix B: 100 x 100
+Output Matrix C: 100 x 100
+Check C[24,52] = 23.035080131624, expected=23.035080131624
+Check C[5,89] = 21.339413670506, expected=21.339413670505998
+Check C[96,52] = 23.424746931665002, expected=23.424746931665005
+Total runtime: 1.211 seconds, Input read time: 0.902 seconds, Output write time: 0.002 seconds
