@@ -1,9 +1,16 @@
 # AWS EC2 Spark Matrix Multiplication
 
-This project implements large-scale matrix multiplication using PySpark and deployed on an AWS EC2 cluster (1 master, 2 workers). 
-The system reads matrix blocks from S3, performs distributed computation using Spark RDD operations, and writes the output back to storage.
-It demonstrates scalable computation, cluster automation, and performance benchmarking across large matrix sizes up to 10,000 × 10,000.
-The goal is to evaluate how cluster size, executor cores, and partition configuration affect performance for different matrix sizes.
+This project performs matrix multiplication using PySpark on a standalone Spark cluster running on AWS EC2 (1 master, 2 workers).  
+Matrices are stored in Amazon S3, processed using Spark RDD operations, and results are written back to S3.
+
+The main goals of this work are to:
+
+- run a complete end-to-end distributed workload on EC2  
+- automate cluster setup, environment configuration, and deployment  
+- benchmark matrix sizes up to 10,000 × 10,000  
+- measure how executor cores, cluster size, and partitioning affect runtime  
+
+The repository includes a GitHub CI pipeline and automation scripts for cluster setup and running the Spark job.
 
 ---
 
@@ -19,18 +26,19 @@ The goal is to evaluate how cluster size, executor cores, and partition configur
 - Apache Spark 4.x (Standalone Mode)
 - PySpark RDD API (map, flatMap, reduceByKey)
 - Multi-node execution (1 Master, N Workers)
-- Cluster automation with Bash scripts
 
 **Programming & Libraries**
 - Python 3.x
 - NumPy
 - Boto3 (AWS SDK for Python)
 
-**DevOps & Tooling**
-- SSH automation (remote worker start/stop)
-- Custom `requirements.sh` for full environment setup
-- Cluster provisioning instructions (`cluster_setup.txt`)
-- Logging & benchmarking utilities
+**Automation & Tooling**
+- GitHub CI pipeline for validation and lint checks
+- `config.env`-based configuration for consistent deployment
+- Automated project sync from local → EC2 master
+- SSH scripts for starting/stopping Spark master & workers
+- Environment setup script (`requirements.sh`)
+- Cluster setup instructions
 
 ---
 
@@ -47,6 +55,7 @@ The goal is to evaluate how cluster size, executor cores, and partition configur
 - Performance comparison between:
   - 6 executor cores
   - 12 executor cores
+- GitHub Actions CI pipeline for basic validation
 
 ---
 
@@ -76,9 +85,11 @@ Larger matrix sizes also show significantly better performance when using higher
 ├── Input/
 │ ├── generate_input.py
 │ ├── input.sh
-│
+├── config.env.template
 ├── matrix_mul.py
-├── run.sh
+├── aws.sh
+├── local_run.sh
+├── dist_run.sh
 ├── ec2_cluster_start.sh
 ├── ec2_cluster_stop.sh
 ├── requirements.sh
@@ -94,6 +105,12 @@ Clone the repository:
 git clone https://github.com/tanzima-sultana/AWS_EC2_Spark_Matrix_Multiplication.git
 cd AWS_EC2_Spark_Matrix_Multiplication
 ```
+
+Fillout config.env:
+```bash
+cp config.env.template config.env
+```
+
 Follow cluster_setup.txt for AWS EC2 cluster setup instructions.
 
 Install dependencies:
@@ -114,25 +131,39 @@ cd Input
 ./input.sh <matrix_size>
 ```
 
-### 2. Start the EC2 Spark cluster
+### 3. Run on local machine (runs a small 100x100 matrix multiplication)
+```bash
+./local_run.sh
+```
+
+### 4. Copy project and SSH to master node
+Update Master EC2 public IP in config.env
+```bash
+./aws.sh
+```
+
+### 5. Start the EC2 Spark cluster (on Master EC2)
 ```bash
 ./ec2_cluster_start.sh
 ```
 
-### 3. Run the Spark job
+### 6. Run the Spark job
 ```bash
-./run.sh <matrix_size> <executor_cores>
+./dist_run.sh <matrix_size> <executor_cores>
 ```
 
-### 4. Check logs and output
+### 7. Check logs and output
 - Runtime log:  
   `/home/ubuntu/matrix_log.txt`
 
 - Output matrix is saved in your S3 bucket under the `output/` folder.
 
-### 5. Stop the EC2 Spark cluster
+### 8. Stop the EC2 Spark cluster
 ```bash
 ./ec2_cluster_stop.sh
 ```
+
+### 8. Git push and CI action
+Push updates and view CI status under the Actions tab in GitHub.
 
 

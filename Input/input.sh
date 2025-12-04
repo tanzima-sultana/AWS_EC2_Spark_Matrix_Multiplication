@@ -10,10 +10,16 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+INPUT_DIR="./Input"
+INPUT_A="$INPUT_DIR/A_${MATRIX_SIZE}.txt"
+INPUT_B="$INPUT_DIR/B_${MATRIX_SIZE}.txt"
+
+MODE="AWS"
+BUCKET=$BUCKET
 N=$1
-BUCKET="<bucket_name>"
+
 
 echo "Generating input matrix of size ${N}x${N} and uploading to bucket: $BUCKET"
 
-python3 generate_input.py --n "$N" --bucket "$BUCKET"
+python3 generate_input.py --mode "$MODE" --bucket "$BUCKET" --input_a "$INPUT_A" --input_a "$INPUT_A" --n "$N" 
 
