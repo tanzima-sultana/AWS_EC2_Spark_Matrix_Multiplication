@@ -1,39 +1,42 @@
 #!/bin/bash
+set -euo pipefail
 
-### ==== CONFIG ==== ###
+# Load local config
+if [ -f "config.env" ]; then
+    source config.env
+else
+    echo "ERROR: config.env not found!"
+    echo "Please create one using:  cp config.env.template config.env"
+    exit 1
+fi     
+
+
 MIN_FREE_GB=1
-PYTHON_PATH="/home/ubuntu/pyspark-env/bin/python"
-
-MASTER="spark://<master_private_ip>:7077"
-PACKAGES="org.apache.spark:spark-hadoop-cloud_2.13:4.0.1"
 
 EXECUTOR_MEMORY="10G"
 DRIVER_MEMORY="8G"
 
-SPARK_FILE="/home/ubuntu/Spark_Matrix_Mul/matrix_mul.py"
+INPUT_A_1000="s3a://$BUCKET/A_1000.txt"
+INPUT_B_1000="s3a://$BUCKET/B_1000.txt"
+OUTPUT_1000="s3a://$BUCKET/output_1000.json"
 
-INPUT_A_1000="s3a://<bucket_name>/A_1000.txt"
-INPUT_B_1000="s3a://<bucket_name>/B_1000.txt"
-OUTPUT_1000="s3a://<bucket_name>/output_1000.json"
+INPUT_A_3000="s3a://$BUCKET/A_3000.txt"
+INPUT_B_3000="s3a://$BUCKET/B_3000.txt"
+OUTPUT_3000="s3a://$BUCKET/output_3000.json"
 
-INPUT_A_3000="s3a://<bucket_name>/A_3000.txt"
-INPUT_B_3000="s3a://<bucket_name>/B_3000.txt"
-OUTPUT_3000="s3a://<bucket_name>/output_3000.json"
+INPUT_A_5000="s3a://$BUCKET/A_5000.txt"
+INPUT_B_5000="s3a://$BUCKET/B_5000.txt"
+OUTPUT_5000="s3a://$BUCKET/output_5000.json"
 
-INPUT_A_5000="s3a://<bucket_name>/A_5000.txt"
-INPUT_B_5000="s3a://<bucket_name>/B_5000.txt"
-OUTPUT_5000="s3a://<bucket_name>/output_5000.json"
+INPUT_A_8000="s3a://$BUCKET/A_8000.txt"
+INPUT_B_8000="s3a://$BUCKET/B_8000.txt"
+OUTPUT_8000="s3a://$BUCKET/output_8000.json"
 
-INPUT_A_8000="s3a://<bucket_name>/A_8000.txt"
-INPUT_B_8000="s3a://<bucket_name>/B_8000.txt"
-OUTPUT_8000="s3a://<bucket_name>/output_8000.json"
+INPUT_A_10000="s3a://$BUCKET/A_10000.txt"
+INPUT_B_10000="s3a://$BUCKET/B_10000.txt"
+OUTPUT_10000="s3a://$BUCKET/output_10000.json"
 
-INPUT_A_10000="s3a://<bucket_name>/A_10000.txt"
-INPUT_B_10000="s3a://<bucket_name>/B_10000.txt"
-OUTPUT_10000="s3a://<bucket_name>/output_10000.json"
-
-
-### ==== FUNCTIONS ==== ###
+# ----- Helper functions
 
 check_disk_space() {
     FREE=$(df --output=avail -BG / | tail -1 | sed 's/G//')
@@ -55,7 +58,7 @@ safe_cleanup() {
     echo "Cleanup done."
 }
 
-### ==== SPARK RUNNERS ==== ###
+## ----- Spark job
 
 run_job() {
     local INPUT_A=$1
@@ -73,12 +76,13 @@ run_job() {
         --executor-memory "$EXECUTOR_MEMORY" \
         --driver-memory "$DRIVER_MEMORY" \
         "$SPARK_FILE" \
+        --mode "AWS" \
         --input_a "$INPUT_A" \
         --input_b "$INPUT_B" \
         --output "$OUTPUT"
 }
 
-### ==== MAIN LOGIC ==== ###
+# ----- 
 
 # Validate arguments
 if [[ -z "$1" || -z "$2" ]]; then
@@ -103,7 +107,7 @@ if ! [[ "$EXECUTOR_CORES" =~ ^[0-9]+$ ]]; then
 fi
 
 
-echo "========== Spark Job Launcher =========="
+echo "Running Spark job.."
 echo "Matrix size: $MATRIX_SIZE x $MATRIX_SIZE"
 echo "Executor cores: $EXECUTOR_CORES"
 

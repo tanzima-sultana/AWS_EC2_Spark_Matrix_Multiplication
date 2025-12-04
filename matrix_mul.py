@@ -68,7 +68,7 @@ def main():
 
 	input_end_time = time.time()
 	input_time = input_end_time - input_start_time
-
+    
 	# Broadcast B
 	B_bcast = sc.broadcast(B)
 
@@ -134,7 +134,7 @@ def main():
 
 	spark.stop()
 	sys.stdout.close()
-
+	
 
 if __name__ == "__main__":
 	main()

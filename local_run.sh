@@ -8,10 +8,7 @@ else
     echo "ERROR: config.env not found!"
     echo "Please create one using:  cp config.env.template config.env"
     exit 1
-fi
-
-
-# ==== CONFIG ====      
+fi     
 
 
 MATRIX_SIZE=100
