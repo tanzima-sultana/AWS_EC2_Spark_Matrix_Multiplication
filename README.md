@@ -1,7 +1,6 @@
 # AWS EC2 Spark Matrix Multiplication
 
-This project performs matrix multiplication using PySpark on a standalone Spark cluster running on AWS EC2 (1 master, 2 workers).  
-Matrices are stored in Amazon S3, processed using Spark RDD operations, and results are written back to S3.
+This project performs matrix multiplication using PySpark on a standalone Spark cluster running on AWS EC2 (1 master, 2 workers). Matrices are stored in Amazon S3, processed using Spark RDD operations, and results are written back to S3.
 
 The main goals of this work are to:
 
